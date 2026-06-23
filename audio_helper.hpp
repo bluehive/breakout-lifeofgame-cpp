@@ -22,7 +22,7 @@ inline Sound makeToneSound(int sampleRate, int frequency, float durationSec, flo
         samples[i] = volume * envelope * std::sin(2.0f * 3.14159265f * frequency * t);
     }
 
-    Wave wave = {0};
+    Wave wave = {};
     wave.frameCount = sampleCount;
     wave.sampleRate = sampleRate;
     wave.sampleSize = 32;
