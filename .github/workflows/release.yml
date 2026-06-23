@@ -1,0 +1,65 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libx11-6 libglx-mesa0 libgl1-mesa-dri
+
+      - name: Fetch raylib prebuilt
+        run: |
+          mkdir -p vendor/raylib-prebuilt
+          curl -sL https://github.com/raysan5/raylib/releases/download/6.0/raylib-6.0_linux_amd64.tar.gz \
+            | tar xz -C vendor/raylib-prebuilt --strip-components=1
+
+      - name: Run tests
+        run: make test-all
+
+      - name: Build executable
+        run: make
+
+      - name: Verify binary
+        run: |
+          ./breakout-lifeofgame-cpp --self-test
+          file breakout-lifeofgame-cpp
+
+      - name: Package release archive
+        run: |
+          mkdir -p dist
+          cp breakout-lifeofgame-cpp dist/
+          chmod +x dist/breakout-lifeofgame-cpp
+          tar -czf breakout-lifeofgame-cpp-linux-amd64.tar.gz -C dist breakout-lifeofgame-cpp
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Linux amd64 build #${{ github.run_number }} (${{ github.sha }})
+          prerelease: false
+          generate_release_notes: true
+          files: breakout-lifeofgame-cpp-linux-amd64.tar.gz
+          body: |
+            Automated Linux amd64 build from commit `${{ github.sha }}`.
+
+            ## Download
+            Extract and run:
+            ```bash
+            tar xzf breakout-lifeofgame-cpp-linux-amd64.tar.gz
+            ./breakout-lifeofgame-cpp
+            ```
+
+            Requires X11, OpenGL, and PulseAudio (typical Linux desktop).

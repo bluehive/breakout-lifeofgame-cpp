@@ -64,6 +64,19 @@ make test        # logic tests only
 
 Window size: 960×720 pixels at 60 FPS.
 
+## Prebuilt binaries (GitHub Releases)
+
+Every push to `main` triggers a [GitHub Actions](.github/workflows/release.yml) workflow that builds and publishes a Linux amd64 binary.
+
+1. Open [Releases](https://github.com/bluehive/breakout-lifeofgame-cpp/releases)
+2. Download `breakout-lifeofgame-cpp-linux-amd64.tar.gz` from the latest build
+3. Extract and run:
+
+```bash
+tar xzf breakout-lifeofgame-cpp-linux-amd64.tar.gz
+./breakout-lifeofgame-cpp
+```
+
 ## Project structure
 
 | File | Purpose |
