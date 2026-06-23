@@ -14,7 +14,7 @@ LDFLAGS = -L$(RAYLIB_PREBUILT)/lib -Wl,-rpath,'$$ORIGIN/$(RAYLIB_PREBUILT)/lib' 
 
 all: breakout-lifeofgame-cpp
 
-breakout-lifeofgame-cpp: main.cpp game_app.hpp game_logic.hpp audio_helper.hpp
+breakout-lifeofgame-cpp: main.cpp game_app.hpp game_logic.hpp audio_helper.hpp bgm_helper.hpp
 	$(CXX) $(CXXFLAGS) $(RAYLIB_INC) -o $@ main.cpp $(LDFLAGS)
 
 test: test_logic

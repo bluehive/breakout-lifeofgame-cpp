@@ -17,6 +17,7 @@ A C++ port of [breakout-lifeofgame.rkt](https://github.com/bluehive/lifeofgame-r
 | Orange paddle, red ball, AABB collision | オレンジのパドル、赤いボール、AABB 衝突判定 |
 | Score +10 per cell, 3 lives, stage clear respawns gliders | セル破壊で+10点、残機3、全破壊でグライダー再配置 |
 | Synthesized sound effects | 合成トーンによる効果音（バウンド・ヒット・破壊・ミス） |
+| Looping BGM (airport-style chiptune, BPM 180) | ループ BGM（ミュージックエアポート風チップ調、テンポ早め） |
 
 ---
 
@@ -110,6 +111,7 @@ tar xzf breakout-lifeofgame-cpp-linux-amd64.tar.gz
 | `game_app.hpp` | Drawing, input, gameTick loop / 描画・入力・ゲームループ |
 | `main.cpp` | Raylib window and main entry / raylib ウィンドウとエントリポイント |
 | `audio_helper.hpp` | Synthesized tone sounds / 合成トーン効果音 |
+| `bgm_helper.hpp` | Procedural BGM (Korobeiniki-style, raylib Music) / 手続き生成 BGM |
 | `test_logic.cpp` | Unit tests / ユニットテスト |
 | `test_integration.cpp` | Integration tests / 統合テスト |
 

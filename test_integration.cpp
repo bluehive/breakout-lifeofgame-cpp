@@ -1,6 +1,7 @@
 // gameTick と音声の統合テスト（本番コードを直接呼び出す）
 // Integration tests for shipped gameTick() and audio helpers
 #include "game_app.hpp"
+#include "bgm_helper.hpp"
 #include <cassert>
 #include <cstdio>
 
@@ -120,6 +121,43 @@ static void test_audio_init_and_play() {
     PASS();
 }
 
+static void test_bgm_init_and_play() {
+    TEST("initGameBgm + PlayMusicStream (airport-style loop)");
+    InitAudioDevice();
+    if (!IsAudioDeviceReady()) {
+        CloseAudioDevice();
+        printf("SKIP (no audio device)\n");
+        return;
+    }
+
+    GameBgm bgm = initGameBgm();
+    if (!bgm.ready) {
+        CloseAudioDevice();
+        FAIL("bgm.ready should be true"); return;
+    }
+    if (!IsMusicValid(bgm.music)) {
+        unloadGameBgm(bgm);
+        CloseAudioDevice();
+        FAIL("music stream invalid"); return;
+    }
+
+    float length = GetMusicTimeLength(bgm.music);
+    if (length <= 0.5f) {
+        unloadGameBgm(bgm);
+        CloseAudioDevice();
+        FAIL("BGM length too short"); return;
+    }
+
+    playBgmIfReady(bgm);
+    for (int i = 0; i < 10; ++i) updateGameBgm(bgm);
+    bool playing = IsMusicStreamPlaying(bgm.music);
+    unloadGameBgm(bgm);
+    CloseAudioDevice();
+
+    if (!playing) { FAIL("BGM did not start playing"); return; }
+    PASS();
+}
+
 int main() {
     printf("Running integration tests (shipped gameTick + audio)...\n");
     test_game_tick_session();
@@ -127,6 +165,7 @@ int main() {
     test_game_tick_paddle_hit_sound_event();
     test_play_sound_if_ready_gating();
     test_audio_init_and_play();
+    test_bgm_init_and_play();
 
     printf("\n%d tests run, %d failed\n", testsRun, testsFailed);
     return testsFailed == 0 ? 0 : 1;

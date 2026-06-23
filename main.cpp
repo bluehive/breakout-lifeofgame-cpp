@@ -1,4 +1,5 @@
 #include "game_app.hpp"
+#include "bgm_helper.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -45,20 +46,33 @@ int main(int argc, char* argv[]) {
 
     InitAudioDevice();
     GameSounds sounds = initGameSounds();
+    GameBgm bgm = initGameBgm();
+    playBgmIfReady(bgm);
 
     GameState state;
     initGame(state);
+    bool wasGameOver = false;
 
     // メインループ（60 FPS）
     while (!WindowShouldClose()) {
         handleInput(state);
         gameTick(state, sounds);
 
+        // ゲームオーバー時は BGM を一時停止、リスタートで再開
+        if (state.gameOver && !wasGameOver) {
+            pauseBgmIfReady(bgm);
+        } else if (!state.gameOver && wasGameOver) {
+            resumeBgmIfReady(bgm);
+        }
+        wasGameOver = state.gameOver;
+        updateGameBgm(bgm);
+
         BeginDrawing();
         drawGame(state);
         EndDrawing();
     }
 
+    unloadGameBgm(bgm);
     unloadGameSounds(sounds);
     CloseAudioDevice();
     CloseWindow();
