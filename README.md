@@ -43,11 +43,17 @@ sudo apt install libraylib-dev
 g++ -std=c++11 -o breakout-lifeofgame-cpp main.cpp -lraylib -lm -lpthread -ldl -lGL -lX11
 ```
 
-### Unit tests (no raylib required)
+### Unit and integration tests
 
 ```bash
-make test
-# or: g++ -std=c++11 -o test_logic test_logic.cpp && ./test_logic
+make test-all    # logic tests (no raylib) + gameTick/audio integration tests
+make test        # logic tests only
+```
+
+### Headless self-test (no window)
+
+```bash
+./breakout-lifeofgame-cpp --self-test
 ```
 
 ## Run
