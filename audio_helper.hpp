@@ -3,6 +3,7 @@
 
 #include "raylib.h"
 #include <cmath>
+#include <cstdlib>
 #include <vector>
 
 struct GameSounds {
@@ -15,11 +16,18 @@ struct GameSounds {
 
 inline Sound makeToneSound(int sampleRate, int frequency, float durationSec, float volume = 0.3f) {
     int sampleCount = static_cast<int>(sampleRate * durationSec);
-    std::vector<float> samples(sampleCount);
+    if (sampleCount <= 0) {
+        return Sound{};
+    }
+
+    // Heap-allocate so wave.data remains valid through LoadSoundFromWave (raylib copies internally).
+    float* data = static_cast<float*>(MemAlloc(static_cast<unsigned int>(sampleCount) * sizeof(float)));
+    if (!data) return Sound{};
+
     for (int i = 0; i < sampleCount; ++i) {
         float t = static_cast<float>(i) / sampleRate;
         float envelope = 1.0f - static_cast<float>(i) / sampleCount;
-        samples[i] = volume * envelope * std::sin(2.0f * 3.14159265f * frequency * t);
+        data[i] = volume * envelope * std::sin(2.0f * 3.14159265f * frequency * t);
     }
 
     Wave wave = {};
@@ -27,9 +35,10 @@ inline Sound makeToneSound(int sampleRate, int frequency, float durationSec, flo
     wave.sampleRate = sampleRate;
     wave.sampleSize = 32;
     wave.channels = 1;
-    wave.data = samples.data();
+    wave.data = data;
 
     Sound sound = LoadSoundFromWave(wave);
+    MemFree(data);
     return sound;
 }
 

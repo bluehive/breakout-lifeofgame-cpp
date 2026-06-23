@@ -1,84 +1,42 @@
-#include "game_logic.hpp"
-#include "audio_helper.hpp"
-#include "raylib.h"
+#include "game_app.hpp"
+#include <cstdio>
 #include <cstdlib>
-#include <string>
+#include <cstring>
 
-static void drawGame(const GameState& state) {
-    ClearBackground(WHITE);
+static void runSelfTest() {
+    GameState state;
+    initGame(state);
 
-    // 1. Draw living cells (blocks)
-    for (const auto& cell : state.cells) {
-        int x = cell.first;
-        int y = cell.second;
-        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-            DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, BLACK);
+    printf("SELFTEST init: cells=%zu lives=%d score=%d ball_active=%d\n",
+           state.cells.size(), state.lives, state.score, state.ball.active ? 1 : 0);
+
+    shootBall(state, true);
+    printf("SELFTEST shoot: vx=%.1f vy=%.1f active=%d\n",
+           state.ball.vx, state.ball.vy, state.ball.active ? 1 : 0);
+
+    GameSounds silent = {};
+    silent.ready = false;
+
+    for (int i = 0; i < 25; ++i) {
+        TickSound snd = gameTick(state, silent);
+        if (snd != TickSound::None) {
+            printf("SELFTEST tick %d: sound_event=%d score=%d lives=%d\n",
+                   i, static_cast<int>(snd), state.score, state.lives);
+        }
+    }
+    printf("SELFTEST after 25 ticks: frame_counter=%d cells=%zu score=%d\n",
+           state.frameCounter, state.cells.size(), state.score);
+    printf("SELFTEST OK\n");
+}
+
+int main(int argc, char* argv[]) {
+    if (argc > 1 && argv[1][0] == '-' && argv[1][1] == '-') {
+        if (strcmp(argv[1], "--self-test") == 0) {
+            runSelfTest();
+            return 0;
         }
     }
 
-    // 2. Draw paddle
-    DrawRectangle(static_cast<int>(state.paddle.x), PADDLE_Y,
-                  PADDLE_WIDTH, PADDLE_HEIGHT, ORANGE);
-
-    // 3. Draw ball
-    DrawRectangle(static_cast<int>(state.ball.x), static_cast<int>(state.ball.y),
-                  BALL_SIZE, BALL_SIZE, RED);
-
-    // 4. Score and lives
-    DrawText(TextFormat("SCORE: %d", state.score), 15, 15, 20, BLACK);
-    DrawText(TextFormat("LIVES: %d", state.lives), 150, 15, 20, BLACK);
-
-    if (state.gameOver) {
-        const char* msg = "GAME OVER - Press SPACE to Restart";
-        int tw = MeasureText(msg, 20);
-        DrawText(msg, SCREEN_WIDTH / 2 - tw / 2, SCREEN_HEIGHT / 2 - 10, 20, RED);
-    }
-}
-
-static void handleInput(GameState& state) {
-    if (IsKeyDown(KEY_LEFT)) {
-        state.paddle.vx = -PADDLE_SPEED;
-    } else if (IsKeyDown(KEY_RIGHT)) {
-        state.paddle.vx = PADDLE_SPEED;
-    } else {
-        state.paddle.vx = 0;
-    }
-
-    if (IsKeyPressed(KEY_SPACE)) {
-        if (state.gameOver) {
-            initGame(state);
-        } else {
-            bool randomRight = GetRandomValue(0, 1) == 1;
-            shootBall(state, randomRight);
-        }
-    }
-}
-
-static void gameTick(GameState& state, const GameSounds& sounds) {
-    if (state.gameOver) return;
-
-    updatePaddle(state);
-    followBallToPaddle(state);
-
-    BallEvent ev = updateBallPhysics(state);
-    if (ev == BallEvent::WallBounce) {
-        playSoundIfReady(sounds, sounds.bounce);
-    } else if (ev == BallEvent::BottomMiss) {
-        playSoundIfReady(sounds, sounds.lifeLost);
-    }
-
-    if (checkPaddleCollision(state)) {
-        playSoundIfReady(sounds, sounds.paddleHit);
-    }
-    if (checkCellCollisions(state)) {
-        playSoundIfReady(sounds, sounds.cellDestroy);
-    }
-
-    tickLifeGeneration(state);
-    checkStageClear(state);
-}
-
-int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout Game of Life");
     SetTargetFPS(60);
 
