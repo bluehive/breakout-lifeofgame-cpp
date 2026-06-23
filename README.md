@@ -88,17 +88,33 @@ Window: 960×720 px, 60 FPS
 
 ## Prebuilt binaries / ビルド済みバイナリ
 
-Every push to `main` triggers a [GitHub Actions](.github/workflows/release.yml) workflow that publishes a Linux amd64 binary.
+Every push to `main` triggers a [GitHub Actions](.github/workflows/release.yml) workflow that publishes **Linux** and **Windows** builds.
 
-`main` ブランチへの push ごとに [GitHub Actions](.github/workflows/release.yml) が Linux amd64 バイナリを [Releases](https://github.com/bluehive/breakout-lifeofgame-cpp/releases) に公開します。
+`main` ブランチへの push ごとに [GitHub Actions](.github/workflows/release.yml) が **Linux / Windows** ビルドを [Releases](https://github.com/bluehive/breakout-lifeofgame-cpp/releases) に公開します。
 
-1. Open [Releases](https://github.com/bluehive/breakout-lifeofgame-cpp/releases) / [Releases](https://github.com/bluehive/breakout-lifeofgame-cpp/releases) を開く
-2. Download `breakout-lifeofgame-cpp-linux-amd64.tar.gz` / 最新の tar.gz をダウンロード
-3. Extract and run / 展開して実行:
+### Linux amd64
+
+1. Download `breakout-lifeofgame-cpp-linux-amd64.tar.gz`
+2. Extract and run / 展開して実行:
 
 ```bash
 tar xzf breakout-lifeofgame-cpp-linux-amd64.tar.gz
 ./breakout-lifeofgame-cpp
+```
+
+### Windows 10/11 (MinGW static exe / 単体 exe)
+
+1. Download `breakout-lifeofgame-cpp-win64.zip`
+2. Extract `breakout-lifeofgame-cpp.exe` / exe を展開
+3. Run (double-click or terminal) / ダブルクリックまたはターミナルから実行
+
+No extra raylib DLL install required / raylib DLL の追加インストール不要
+
+### Build Windows locally (MinGW) / ローカル Windows ビルド
+
+```bash
+# MSYS2 MinGW64 shell
+bash scripts/build-windows-mingw.sh
 ```
 
 ---
