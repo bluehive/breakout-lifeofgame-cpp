@@ -1,0 +1,8 @@
+*.o
+*.a
+breakout-lifeofgame-cpp
+test_logic
+vendor/
+.DS_Store
+
+# Keep source only; raylib is fetched per README
