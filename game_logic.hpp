@@ -9,31 +9,35 @@
 #include <vector>
 
 // -------------------------------------------------------------
+// 定数と画面設定（breakout-lifeofgame.rkt と同一）
 // Constants (matching breakout-lifeofgame.rkt)
 // -------------------------------------------------------------
-constexpr int WIDTH = 40;
-constexpr int HEIGHT = 30;
-constexpr int CELL_SIZE = 24;
+constexpr int WIDTH = 40;          // グリッド列数 / grid columns
+constexpr int HEIGHT = 30;         // グリッド行数 / grid rows
+constexpr int CELL_SIZE = 24;      // 1セルのピクセルサイズ / pixels per cell
 constexpr int SCREEN_WIDTH = WIDTH * CELL_SIZE;   // 960
 constexpr int SCREEN_HEIGHT = HEIGHT * CELL_SIZE; // 720
 
 constexpr int BALL_SIZE = 16;
 constexpr int PADDLE_WIDTH = 150;
 constexpr int PADDLE_HEIGHT = 15;
-constexpr int PADDLE_Y = SCREEN_HEIGHT - PADDLE_HEIGHT - 50; // 655
+constexpr int PADDLE_Y = SCREEN_HEIGHT - PADDLE_HEIGHT - 50; // パドルY座標 / paddle Y
 constexpr int PADDLE_SPEED = 11;
 
-using Cell = std::pair<int, int>;
+using Cell = std::pair<int, int>;  // (x, y) グリッド座標
 using Cells = std::vector<Cell>;
 
 // -------------------------------------------------------------
+// ライフゲームのコアロジック（純粋関数・I/O なし）
 // Game of Life core logic (pure, no I/O)
 // -------------------------------------------------------------
 
+// セルが生存リストに含まれるか判定
 inline bool alive(const Cells& cells, const Cell& cell) {
     return std::find(cells.begin(), cells.end(), cell) != cells.end();
 }
 
+// 周囲8方向の隣接セル座標を返す
 inline std::vector<Cell> cellNeighbors(const Cell& cell) {
     int x = cell.first;
     int y = cell.second;
@@ -45,6 +49,7 @@ inline std::vector<Cell> cellNeighbors(const Cell& cell) {
     };
 }
 
+// 隣接する生存セルの個数をカウント
 inline int countAliveNeighbors(const Cells& cells, const Cell& cell) {
     int count = 0;
     for (const auto& n : cellNeighbors(cell)) {
@@ -53,7 +58,9 @@ inline int countAliveNeighbors(const Cells& cells, const Cell& cell) {
     return count;
 }
 
+// 次世代の生存セルリストを計算（B3/S23 ルール）
 inline Cells nextGeneration(const Cells& cells) {
+    // 候補は「現在の生存セル」とその隣接セルのみ
     std::set<Cell> candidateSet;
     for (const auto& cell : cells) {
         candidateSet.insert(cell);
@@ -67,35 +74,40 @@ inline Cells nextGeneration(const Cells& cells) {
         bool currentlyAlive = alive(cells, cell);
         int neighbors = countAliveNeighbors(cells, cell);
         if (currentlyAlive) {
+            // 生存: 隣接2個または3個
             if (neighbors == 2 || neighbors == 3) result.push_back(cell);
         } else {
+            // 誕生: 隣接ちょうど3個
             if (neighbors == 3) result.push_back(cell);
         }
     }
     return result;
 }
 
+// 初期状態: 画面上部に4つのグライダーを配置
 inline Cells initCells() {
     Cells cells;
-    // Glider 1 (top-left)
+    // グライダー1（左上）
     cells.push_back({5, 4}); cells.push_back({6, 5});
     cells.push_back({4, 6}); cells.push_back({5, 6}); cells.push_back({6, 6});
-    // Glider 2 (center-left)
+    // グライダー2（中央左）
     cells.push_back({15, 5}); cells.push_back({16, 6});
     cells.push_back({14, 7}); cells.push_back({15, 7}); cells.push_back({16, 7});
-    // Glider 3 (center-right)
+    // グライダー3（中央右）
     cells.push_back({25, 4}); cells.push_back({26, 5});
     cells.push_back({24, 6}); cells.push_back({25, 6}); cells.push_back({26, 6});
-    // Glider 4 (lower-center)
+    // グライダー4（中央下側）
     cells.push_back({10, 12}); cells.push_back({11, 13});
     cells.push_back({9, 14}); cells.push_back({10, 14}); cells.push_back({11, 14});
     return cells;
 }
 
 // -------------------------------------------------------------
+// 物理演算と衝突判定（純粋ヘルパー）
 // Physics and collision (pure helpers)
 // -------------------------------------------------------------
 
+// 2つの矩形が重なっているか（AABB 衝突判定）
 inline bool rectOverlap(float x1, float y1, float w1, float h1,
                         float x2, float y2, float w2, float h2) {
     return x1 < x2 + w2 && x1 + w1 > x2 &&
@@ -103,12 +115,12 @@ inline bool rectOverlap(float x1, float y1, float w1, float h1,
 }
 
 struct BallState {
-    float x, y, vx, vy;
-    bool active;
+    float x, y, vx, vy;  // 位置と速度（ピクセル/フレーム）
+    bool active;         // 発射済みかどうか
 };
 
 struct PaddleState {
-    float x, vx;
+    float x, vx;  // 左端X座標と移動速度
 };
 
 struct GameState {
@@ -118,9 +130,10 @@ struct GameState {
     int lives;
     int score;
     bool gameOver;
-    int frameCounter;
+    int frameCounter;  // ライフゲーム世代交代用（20フレームごと）
 };
 
+// ボールをパドル上の待機位置にリセット
 inline void resetBall(GameState& state) {
     state.ball.active = false;
     state.ball.x = state.paddle.x + PADDLE_WIDTH / 2.0f - BALL_SIZE / 2.0f;
@@ -129,6 +142,7 @@ inline void resetBall(GameState& state) {
     state.ball.vy = 0;
 }
 
+// ゲーム全体を初期化（開始時・リスタート時）
 inline void initGame(GameState& state) {
     state.cells = initCells();
     state.paddle.x = (SCREEN_WIDTH - PADDLE_WIDTH) / 2.0f;
@@ -140,6 +154,7 @@ inline void initGame(GameState& state) {
     resetBall(state);
 }
 
+// ボールを発射（スペースキー）
 inline void shootBall(GameState& state, bool randomRight) {
     if (!state.ball.active) {
         state.ball.active = true;
@@ -152,6 +167,7 @@ inline void shootBall(GameState& state, bool randomRight) {
 
 enum class BallEvent { None, WallBounce, BottomMiss, PaddleHit, CellHit };
 
+// ボール移動と壁・床との反射処理
 inline BallEvent updateBallPhysics(GameState& state) {
     if (!state.ball.active) return BallEvent::None;
 
@@ -160,6 +176,7 @@ inline BallEvent updateBallPhysics(GameState& state) {
 
     BallEvent event = BallEvent::None;
 
+    // 左右の壁で反射
     if (state.ball.x <= 0) {
         state.ball.x = 0;
         state.ball.vx = -state.ball.vx;
@@ -170,11 +187,13 @@ inline BallEvent updateBallPhysics(GameState& state) {
         state.ball.vx = -state.ball.vx;
         event = BallEvent::WallBounce;
     }
+    // 天井で反射
     if (state.ball.y <= 0) {
         state.ball.y = 0;
         state.ball.vy = -state.ball.vy;
         event = BallEvent::WallBounce;
     }
+    // 画面底でミス（ライフ減少）
     if (state.ball.y >= SCREEN_HEIGHT) {
         state.lives -= 1;
         if (state.lives <= 0) {
@@ -187,19 +206,22 @@ inline BallEvent updateBallPhysics(GameState& state) {
     return event;
 }
 
+// パドル衝突: 当たり位置で反射角を変化
 inline bool checkPaddleCollision(GameState& state) {
     if (!rectOverlap(state.ball.x, state.ball.y, BALL_SIZE, BALL_SIZE,
                      state.paddle.x, PADDLE_Y, PADDLE_WIDTH, PADDLE_HEIGHT)) {
         return false;
     }
+    // Y方向は常に上向きに反転
     state.ball.vy = -std::abs(state.ball.vy);
     float hitPos = (state.ball.x + BALL_SIZE / 2.0f) - state.paddle.x;
-    float relativeHit = hitPos / PADDLE_WIDTH;
-    float angleFactor = relativeHit * 2.0f - 1.0f;
+    float relativeHit = hitPos / PADDLE_WIDTH;       // 0.0〜1.0
+    float angleFactor = relativeHit * 2.0f - 1.0f;   // -1.0〜1.0
     state.ball.vx = angleFactor * 7.0f;
     return true;
 }
 
+// セル（ブロック）衝突: 破壊・スコア加算・反射
 inline bool checkCellCollisions(GameState& state) {
     Cells remaining;
     bool hit = false;
@@ -213,6 +235,7 @@ inline bool checkCellCollisions(GameState& state) {
         if (rectOverlap(state.ball.x, state.ball.y, BALL_SIZE, BALL_SIZE,
                         bx, by, CELL_SIZE, CELL_SIZE)) {
             state.score += 10;
+            // 衝突面（上下か左右か）で反射方向を決定
             float ballCenterX = state.ball.x + BALL_SIZE / 2.0f;
             float ballCenterY = state.ball.y + BALL_SIZE / 2.0f;
             float blockCenterX = bx + CELL_SIZE / 2.0f;
@@ -224,7 +247,7 @@ inline bool checkCellCollisions(GameState& state) {
             } else {
                 state.ball.vy = -state.ball.vy;
             }
-            // Remove hit cell and all remaining cells after it (matching Racket loop)
+            // 当たったセルを除外（貫通防止のため1フレーム1セル）
             for (size_t j = i + 1; j < state.cells.size(); ++j) {
                 remaining.push_back(state.cells[j]);
             }
@@ -237,6 +260,7 @@ inline bool checkCellCollisions(GameState& state) {
     return hit;
 }
 
+// パドル移動と画面端クリッピング
 inline void updatePaddle(GameState& state) {
     state.paddle.x += state.paddle.vx;
     if (state.paddle.x < 0) state.paddle.x = 0;
@@ -245,6 +269,7 @@ inline void updatePaddle(GameState& state) {
     }
 }
 
+// 未発射時はボールをパドル上に追従させる
 inline void followBallToPaddle(GameState& state) {
     if (!state.ball.active) {
         state.ball.x = state.paddle.x + PADDLE_WIDTH / 2.0f - BALL_SIZE / 2.0f;
@@ -252,6 +277,7 @@ inline void followBallToPaddle(GameState& state) {
     }
 }
 
+// 20フレームごとにライフゲームの世代交代
 inline void tickLifeGeneration(GameState& state) {
     state.frameCounter += 1;
     if (state.frameCounter >= 20) {
@@ -260,6 +286,7 @@ inline void tickLifeGeneration(GameState& state) {
     }
 }
 
+// 全セル破壊でステージクリア → グライダー再配置
 inline void checkStageClear(GameState& state) {
     if (state.cells.empty()) {
         state.cells = initCells();

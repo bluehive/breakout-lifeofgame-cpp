@@ -1,7 +1,8 @@
+# Breakout Game of Life — ビルド設定 / Build configuration
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra
 
-# Prebuilt raylib (download from GitHub releases) or system install
+# raylib プリビルド版（GitHub Releases から取得）またはシステムインストール
 RAYLIB_PREBUILT ?= vendor/raylib-prebuilt
 RAYLIB_INC = -I$(RAYLIB_PREBUILT)/include
 RAYLIB_A = $(RAYLIB_PREBUILT)/lib/libraylib.a

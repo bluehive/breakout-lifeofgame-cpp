@@ -1,3 +1,5 @@
+// コアロジックのユニットテスト（raylib 不要）
+// Unit tests for core game logic (no raylib required)
 #include "game_logic.hpp"
 #include <cassert>
 #include <cstdio>

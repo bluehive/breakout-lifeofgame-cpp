@@ -6,21 +6,23 @@
 #include <cstdlib>
 #include <vector>
 
+// ゲーム内で使用する効果音セット
 struct GameSounds {
-    Sound bounce;
-    Sound paddleHit;
-    Sound cellDestroy;
-    Sound lifeLost;
-    bool ready;
+    Sound bounce;       // 壁バウンド
+    Sound paddleHit;    // パドルヒット
+    Sound cellDestroy;  // セル破壊
+    Sound lifeLost;     // ライフ減少
+    bool ready;         // 音声デバイス初期化済みか
 };
 
+// 正弦波＋減衰エンベロープで短いトーンを合成
 inline Sound makeToneSound(int sampleRate, int frequency, float durationSec, float volume = 0.3f) {
     int sampleCount = static_cast<int>(sampleRate * durationSec);
     if (sampleCount <= 0) {
         return Sound{};
     }
 
-    // Heap-allocate so wave.data remains valid through LoadSoundFromWave (raylib copies internally).
+    // LoadSoundFromWave まで有効なヒープバッファを確保
     float* data = static_cast<float*>(MemAlloc(static_cast<unsigned int>(sampleCount) * sizeof(float)));
     if (!data) return Sound{};
 
@@ -42,6 +44,7 @@ inline Sound makeToneSound(int sampleRate, int frequency, float durationSec, flo
     return sound;
 }
 
+// 各イベント用の効果音を生成
 inline GameSounds initGameSounds() {
     GameSounds sounds = {};
     sounds.ready = false;
@@ -65,6 +68,7 @@ inline void unloadGameSounds(GameSounds& sounds) {
     sounds.ready = false;
 }
 
+// 音声が利用可能なときだけ再生
 inline void playSoundIfReady(const GameSounds& sounds, Sound sound) {
     if (sounds.ready) PlaySound(sound);
 }

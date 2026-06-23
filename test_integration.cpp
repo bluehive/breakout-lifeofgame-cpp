@@ -1,3 +1,5 @@
+// gameTick と音声の統合テスト（本番コードを直接呼び出す）
+// Integration tests for shipped gameTick() and audio helpers
 #include "game_app.hpp"
 #include <cassert>
 #include <cstdio>
@@ -10,7 +12,7 @@ static int testsFailed = 0;
 #define PASS() printf("PASS\n")
 #define FAIL(msg) do { printf("FAIL: %s\n", msg); ++testsFailed; } while (0)
 
-// Drives the shipped gameTick() through a full mini-session (no reimplementation).
+// 本番 gameTick() を短いセッションで駆動する
 static void test_game_tick_session() {
     TEST("gameTick mini-session (shoot, evolve, score)");
     GameState state;

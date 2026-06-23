@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 
+// ウィンドウなしの自己診断（CI・動作確認用）
 static void runSelfTest() {
     GameState state;
     initGame(state);
@@ -30,6 +31,7 @@ static void runSelfTest() {
 }
 
 int main(int argc, char* argv[]) {
+    // ヘッドレス自己テストモード
     if (argc > 1 && argv[1][0] == '-' && argv[1][1] == '-') {
         if (strcmp(argv[1], "--self-test") == 0) {
             runSelfTest();
@@ -37,6 +39,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // raylib ウィンドウ・音声の初期化
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout Game of Life");
     SetTargetFPS(60);
 
@@ -46,6 +49,7 @@ int main(int argc, char* argv[]) {
     GameState state;
     initGame(state);
 
+    // メインループ（60 FPS）
     while (!WindowShouldClose()) {
         handleInput(state);
         gameTick(state, sounds);

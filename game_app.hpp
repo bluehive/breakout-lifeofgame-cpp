@@ -5,9 +5,11 @@
 #include "audio_helper.hpp"
 #include "raylib.h"
 
+// ゲーム画面の描画
 inline void drawGame(const GameState& state) {
     ClearBackground(WHITE);
 
+    // 1. 生存セル（ブロック）の描画
     for (const auto& cell : state.cells) {
         int x = cell.first;
         int y = cell.second;
@@ -16,15 +18,19 @@ inline void drawGame(const GameState& state) {
         }
     }
 
+    // 2. パドル
     DrawRectangle(static_cast<int>(state.paddle.x), PADDLE_Y,
                   PADDLE_WIDTH, PADDLE_HEIGHT, ORANGE);
 
+    // 3. ボール
     DrawRectangle(static_cast<int>(state.ball.x), static_cast<int>(state.ball.y),
                   BALL_SIZE, BALL_SIZE, RED);
 
+    // 4. スコア・ライフ表示
     DrawText(TextFormat("SCORE: %d", state.score), 15, 15, 20, BLACK);
     DrawText(TextFormat("LIVES: %d", state.lives), 150, 15, 20, BLACK);
 
+    // ゲームオーバー表示
     if (state.gameOver) {
         const char* msg = "GAME OVER - Press SPACE to Restart";
         int tw = MeasureText(msg, 20);
@@ -32,6 +38,7 @@ inline void drawGame(const GameState& state) {
     }
 }
 
+// キーボード入力の処理
 inline void handleInput(GameState& state) {
     if (IsKeyDown(KEY_LEFT)) {
         state.paddle.vx = -PADDLE_SPEED;
@@ -43,7 +50,7 @@ inline void handleInput(GameState& state) {
 
     if (IsKeyPressed(KEY_SPACE)) {
         if (state.gameOver) {
-            initGame(state);
+            initGame(state);  // リスタート
         } else {
             bool randomRight = GetRandomValue(0, 1) == 1;
             shootBall(state, randomRight);
@@ -51,9 +58,10 @@ inline void handleInput(GameState& state) {
     }
 }
 
-// Returns which sound event fired this tick (for testing and audio routing).
+// この tick で鳴った効果音の種類（テスト・音声ルーティング用）
 enum class TickSound { None, Bounce, LifeLost, PaddleHit, CellDestroy };
 
+// 1フレーム分のゲーム状態更新（参照版 game-tick と同じ順序）
 inline TickSound gameTick(GameState& state, const GameSounds& sounds) {
     if (state.gameOver) return TickSound::None;
 
